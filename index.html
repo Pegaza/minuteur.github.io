@@ -165,10 +165,6 @@ startButton.addEventListener('click', function() {
         // Lorsque le minuteur est en pause, désactivez le curseur
         slider.disabled = true;
     } else {
-        if (totalSeconds <= 0) { 
-            alert('Veuillez sélectionner une durée valide.');
-            return;
-        }
         slider.classList.remove('paused');
         slider.classList.add('running');
         // Lorsque le minuteur démarre, désactivez le curseur
@@ -213,19 +209,45 @@ function updateDisplay() {
 }
 
 
+// ... Reste du code ...
+
+// 1. Préchargez le fichier audio
+const audio = new Audio('https://lasonotheque.org/UPLOAD/mp3/0035.mp3');
+
 function decrementTime() {
     totalSeconds--;
+
     if (totalSeconds <= 0) {
         totalSeconds = 0;
         clearInterval(interval);
         interval = null;
         slider.classList.remove('running');
-        startButton.textContent = "Démarrer";
+        resetTimer();
+        audio.play();
+        
     }
     updateDisplay();
     slider.value = totalSeconds;
     updateSliderBackground();
 }
+
+function resetTimer() {
+    totalSeconds = 0;
+    slider.value = 0;
+    // Lors de la réinitialisation, réactivez le curseur pour permettre à l'utilisateur de définir à nouveau le temps.
+    slider.disabled = false;
+    const icon = startButton.querySelector('i');
+    icon.className = 'fas fa-play'; 
+    slider.classList.remove('paused');
+    slider.classList.remove('running');
+    updateDisplay();
+    updateSliderBackground();
+    audio.pause();
+    audio.currentTime = 0;
+}
+
+resetButton.addEventListener('click', resetTimer);
+
 
 
 
