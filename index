@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@500&family=MuseoModerno:wght@300;400&display=swap" rel="stylesheet">
+
+    <title>Minuteur stylisé avec slider</title>
+    <style>
+        body {
+            font-family: 'Dosis', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #fff;
+        }
+
+        .time-display {
+            font-family: 'Dosis', sans-serif;
+            font-weight: 300;
+            font-size: 2em;
+            margin-bottom: 5px;
+            color: #000;
+        }
+
+        #timer-slider {
+            width: 20%;
+            height: 12px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+            margin: 20px 0;
+        }
+
+        #timer-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #b7df89;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        #timer-slider::-webkit-slider-thumb:hover {
+            background: #f7e583;
+        }
+
+        #timer-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #b7df89;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        #timer-slider::-moz-range-thumb:hover {
+            background: #0056b3;
+        }
+
+input[type="range"]::-webkit-slider-thumb {
+    background: #b7df89;
+    
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    background: linear-gradient(to right, #b7df89 0%, #b7df89 var(--fillPercentage), #ccc var(--fillPercentage));
+    
+}
+
+
+#timer-slider.paused::-webkit-slider-thumb,
+#timer-slider.running::-webkit-slider-thumb {
+    opacity: 0;
+}
+
+#timer-slider.paused::-moz-range-thumb,
+#timer-slider.running::-moz-range-thumb {
+    opacity: 0;
+}
+
+
+.button-container {
+    display: flex;
+    gap: 10px;  /* Cela crée un espace de 10 pixels entre les boutons */
+    justify-content: center;  /* Centrer les boutons dans le conteneur */
+}
+
+button {
+    /* Les styles existants de votre bouton (ajouté pour la référence) */
+font-family: 'Dosis', sans-serif;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px; 
+    color: #c4eded;
+}
+
+button:hover {
+    color: #f7e583;
+}
+
+button:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+
+        
+        #timer-slider {
+            /* Cette ligne assure que le fond initial est uniforme */
+            background: linear-gradient(90deg, #e0e0e0 0%, #e0e0e0 100%);
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+    <div class="time-display" id="display">00:00</div>
+    <input type="range" id="timer-slider" min="0" max="7200" step="30" value="0">
+
+
+
+<div class="button-container">
+    <!-- Bouton Démarrer/Pause avec icône -->
+    <button id="start-button"><i class="fas fa-play"></i></button>
+
+    <!-- Bouton Réinitialiser avec icône -->
+    <button id="reset-button"><i class="fas fa-redo"></i></button>
+</div>
+
+
+    <script>
+        const slider = document.getElementById('timer-slider');
+        const display = document.getElementById('display');
+const startButton = document.getElementById('start-button');
+const resetButton = document.getElementById('reset-button');
+
+        let totalSeconds = 0;
+        let initialSeconds = 0; 
+        let interval;
+
+        slider.addEventListener('input', function() {
+            totalSeconds = parseInt(slider.value, 10);
+            initialSeconds = totalSeconds;
+            updateDisplay();
+        });
+startButton.addEventListener('click', function() {
+    const icon = startButton.querySelector('i');
+    if (interval) { 
+        clearInterval(interval);
+        interval = null; 
+        slider.classList.add('paused');
+        slider.classList.remove('running');
+        icon.className = 'fas fa-play'; 
+        // Lorsque le minuteur est en pause, désactivez le curseur
+        slider.disabled = true;
+    } else {
+        if (totalSeconds <= 0) { 
+            alert('Veuillez sélectionner une durée valide.');
+            return;
+        }
+        slider.classList.remove('paused');
+        slider.classList.add('running');
+        // Lorsque le minuteur démarre, désactivez le curseur
+        slider.disabled = true;
+        decrementTime();
+        interval = setInterval(decrementTime, 1000);
+        icon.className = 'fas fa-pause';
+    }
+});
+
+resetButton.addEventListener('click', function() {
+    if (interval) {
+        clearInterval(interval);
+        interval = null;
+        slider.classList.remove('running');
+    }
+    totalSeconds = 0;
+    slider.value = 0;
+    // Lors de la réinitialisation, réactivez le curseur pour permettre à l'utilisateur de définir à nouveau le temps.
+    slider.disabled = false;
+    const icon = startButton.querySelector('i');
+    icon.className = 'fas fa-play'; 
+    slider.classList.remove('paused');
+    slider.classList.remove('running');
+    updateDisplay();
+    updateSliderBackground();
+});
+
+
+
+
+function updateDisplay() {
+    let hours = Math.floor(totalSeconds / 3600);
+    let minutes = Math.floor((totalSeconds % 3600) / 60);
+    let seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+        display.textContent = `${hours}h ${String(minutes).padStart(2, '0')}m`;
+    } else {
+        display.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+}
+
+
+function decrementTime() {
+    totalSeconds--;
+    if (totalSeconds <= 0) {
+        totalSeconds = 0;
+        clearInterval(interval);
+        interval = null;
+        slider.classList.remove('running');
+        startButton.textContent = "Démarrer";
+    }
+    updateDisplay();
+    slider.value = totalSeconds;
+    updateSliderBackground();
+}
+
+
+
+        function updateSliderBackground() {
+            let progress = (totalSeconds / initialSeconds) * 100;
+            slider.style.background = `linear-gradient(90deg, #b7df89 ${progress}%, #e0e0e0 ${progress}%)`;
+        }
+    </script>
+</body>
+
+</html>
